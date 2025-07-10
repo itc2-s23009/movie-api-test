@@ -15,6 +15,11 @@ export default function Layout({ children }) {
         router.push(`/search?query=${encodeURIComponent(search)}`)
     }
 
+    const handleLogout = async () => {
+        await signOut(auth)
+        router.push('/login')
+    }
+
     return (
         <div className="min-h-screen bg-black text-white">
             {/* ヘッダー */}
@@ -24,7 +29,7 @@ export default function Layout({ children }) {
                     &#9776;
                 </button>
 
-                {/* 検索バーを右側に寄せるために ml-auto を追加 */}
+                {/* 検索バーを右に寄せる */}
                 <form onSubmit={handleSearch} className="ml-auto">
                     <input
                         type="text"
@@ -36,13 +41,13 @@ export default function Layout({ children }) {
                 </form>
             </header>
 
-            {/* スライドメニュー */}
+            {/* サイドメニュー */}
             <aside
                 className={`fixed top-0 left-0 h-full w-64 bg-gray-800 transform ${
                     sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 } transition-transform duration-300 ease-in-out z-40 flex flex-col`}
             >
-                {/* ✕ 閉じるボタン */}
+                {/* ✕ ボタン */}
                 <button
                     onClick={() => setSidebarOpen(false)}
                     className="text-white text-2xl absolute top-4 right-4"
@@ -50,7 +55,7 @@ export default function Layout({ children }) {
                     ✕
                 </button>
 
-                {/* メニュー本体 */}
+                {/* メニュー */}
                 <div className="flex-1 p-6 space-y-4 overflow-y-auto mt-12">
                     <h2 className="text-xl font-bold">メニュー</h2>
                     <Link href="/" className="block hover:text-blue-400">ホーム</Link>
@@ -61,10 +66,10 @@ export default function Layout({ children }) {
                     <div className="text-sm text-gray-400">※ フィルターや絞り込み機能は今後追加予定</div>
                 </div>
 
-                {/* 下部ログアウトボタン */}
+                {/* ログアウト */}
                 <div className="p-4 border-t border-gray-700">
                     <button
-                        onClick={() => signOut(auth)}
+                        onClick={handleLogout}
                         className="w-full text-left text-red-400 hover:text-red-200"
                     >
                         ログアウト
@@ -72,7 +77,7 @@ export default function Layout({ children }) {
                 </div>
             </aside>
 
-            {/* メイン内容 */}
+            {/* メイン */}
             <main className="pt-4 px-4 md:px-6">{children}</main>
         </div>
     )
