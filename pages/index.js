@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import {useEffect, useState} from 'react'
 import Link from 'next/link'
-import { db } from '../lib/firebase'
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
+import {db} from '../lib/firebase'
+import {collection, query, orderBy, onSnapshot} from 'firebase/firestore'
 
 export default function Home() {
     const [popularMovies, setPopularMovies] = useState([])
@@ -61,11 +61,12 @@ export default function Home() {
         <div className="relative p-6 bg-black min-h-screen text-white overflow-hidden">
             <h1 className="text-3xl font-bold mb-6">人気の映画</h1>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <div className="grid grid-cols-2 md:grid-cols-8 gap-4 mb-10">
                 {popularMovies.map((movie) => (
                     <Link href={`/movie/${movie.id}`} key={movie.id}>
                         <div className="bg-gray-800 p-2 rounded cursor-pointer hover:bg-gray-700">
-                            <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} className="rounded" />
+                            <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title}
+                                 className="rounded"/>
                             <p className="mt-2">{movie.title}</p>
                         </div>
                     </Link>
@@ -77,7 +78,8 @@ export default function Home() {
                 {famousMovies.map((movie) => (
                     <Link href={`/movie/${movie.id}`} key={movie.id}>
                         <div className="bg-gray-700 p-2 rounded cursor-pointer hover:bg-gray-600">
-                            <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} className="rounded" />
+                            <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title}
+                                 className="rounded"/>
                             <p className="mt-2">{movie.title}</p>
                         </div>
                     </Link>
@@ -91,11 +93,13 @@ export default function Home() {
                         className="absolute whitespace-nowrap text-lg font-bold text-white cursor-pointer"
                         style={{
                             top: `${comment.top}px`,
+                            transform: 'translateX(100vw)', // ← これを追加！
                             animationDelay: `${comment.delay}s`,
                             animationName: 'slide',
                             animationDuration: '15s',
                             animationTimingFunction: 'linear',
                             animationIterationCount: 'infinite',
+                            willChange: 'transform'
                         }}
                     >
                         {'⭐'.repeat(comment.rating)} {comment.text}
