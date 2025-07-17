@@ -117,9 +117,14 @@ export default function MovieDetail() {
         <div className="min-h-screen bg-black text-white p-6">
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-8">
                 <div className="md:w-1/3 space-y-6">
+                    {/*<img*/}
+                    {/*    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}*/}
+                    {/*    alt={movie.title}*/}
+                    {/*    className="rounded shadow-lg w-full"*/}
+                    {/*/>*/}
                     <img
-                        src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                        alt={movie.title}
+                        src="/noimage.png"
+                        alt="No image"
                         className="rounded shadow-lg w-full"
                     />
                     <form onSubmit={handleSubmit} className="bg-gray-900 border border-gray-700 p-4 rounded space-y-4">
@@ -144,7 +149,7 @@ export default function MovieDetail() {
                             送信する
                         </button>
                     </form>
-                </div>
+                </div>  
 
                 <div className="md:w-2/3 space-y-6">
                     <div>
