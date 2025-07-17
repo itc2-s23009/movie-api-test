@@ -138,18 +138,27 @@ export default function MovieDetail() {
                         <div className="flex items-center gap-2">
                             <span>評価:</span>
                             {[1, 2, 3, 4, 5].map((num) => (
-                                <span
+                                <button
                                     key={num}
+                                    type="button"
                                     onClick={() => setRating(num)}
-                                    className={`cursor-pointer text-2xl ${num <= rating ? 'text-yellow-400' : 'text-gray-500'}`}
-                                >⭐</span>
+                                    className="focus:outline-none"
+                                >
+                                <span
+                                    className={`text-2xl ${
+                                        num <= rating ? 'text-yellow-400' : 'text-gray-500'
+                                    }`}
+                                >
+                                    ★
+                                </span>
+                                </button>
                             ))}
                         </div>
                         <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
                             送信する
                         </button>
                     </form>
-                </div>  
+                </div>
 
                 <div className="md:w-2/3 space-y-6">
                     <div>
