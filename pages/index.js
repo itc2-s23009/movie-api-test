@@ -65,6 +65,8 @@ export default function Home() {
                 {popularMovies.map((movie) => (
                     <Link href={`/movie/${movie.id}`} key={movie.id}>
                         <div className="bg-gray-800 p-2 rounded cursor-pointer hover:bg-gray-700">
+                            {/*<img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title}*/}
+                            {/*     className="rounded"/>*/}
                             <img
                                 src="/noimage.png"
                                 alt="No image"
@@ -81,6 +83,8 @@ export default function Home() {
                 {famousMovies.map((movie) => (
                     <Link href={`/movie/${movie.id}`} key={movie.id}>
                         <div className="bg-gray-700 p-2 rounded cursor-pointer hover:bg-gray-600">
+                            {/*<img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title}*/}
+                            {/*     className="rounded"/>*/}
                             <img
                                 src="/noimage.png"
                                 alt="No image"
