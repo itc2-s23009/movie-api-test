@@ -1,25 +1,68 @@
-import {useEffect, useState} from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import {db} from '../lib/firebase'
-import {collection, query, orderBy, onSnapshot} from 'firebase/firestore'
+import { useRouter } from 'next/router' // ← 追加
+import { db } from '../lib/firebase'
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
 
 export default function Home() {
     const [popularMovies, setPopularMovies] = useState([])
     const [famousMovies, setFamousMovies] = useState([])
+    const [genreMovies, setGenreMovies] = useState([]) // ← 追加
     const [comments, setComments] = useState([])
 
-    useEffect(() => {
-        async function fetchPopular() {
-            const res = await fetch('https://api.themoviedb.org/3/movie/popular?language=ja-JP&page=1', {
-                headers: {
-                    Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_ACCESS_TOKEN}`,
-                    accept: 'application/json',
-                },
-            })
-            const data = await res.json()
-            setPopularMovies(data.results)
-        }
+    const router = useRouter()
+    const genreId = router.query.genre
+    const genreName = router.query.name
 
+    useEffect(() => {
+        if (!genreId) {
+            // ジャンル選択時は人気映画は表示しない
+            async function fetchPopular() {
+                const res = await fetch('https://api.themoviedb.org/3/movie/popular?language=ja-JP&page=1', {
+                    headers: {
+                        Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_ACCESS_TOKEN}`,
+                        accept: 'application/json',
+                    },
+                })
+                const data = await res.json()
+                setPopularMovies(data.results)
+            }
+
+            fetchPopular()
+        }
+    }, [genreId]) // ← genreId 依存に
+
+    useEffect(() => {
+        if (genreId) {
+            async function fetchGenreMovies() {
+                const fetchPage = async (page) => {
+                    const res = await fetch(
+                        `https://api.themoviedb.org/3/discover/movie?with_genres=${genreId}&language=ja-JP&page=${page}`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_ACCESS_TOKEN}`,
+                                accept: 'application/json',
+                            },
+                        }
+                    )
+                    const data = await res.json()
+                    return data.results
+                }
+
+                // 2ページ分（20件 × 2 = 40件）取得して結合
+                const page1 = await fetchPage(1)
+                const page2 = await fetchPage(2)
+                const allResults = [...page1, ...page2].slice(0, 40) // 念のため40件でカット
+
+                setGenreMovies(allResults)
+            }
+
+            fetchGenreMovies()
+        }
+    }, [genreId])
+    // ← ジャンル変更時に再取得
+
+    useEffect(() => {
         async function fetchFamous() {
             const ids = [1891, 11, 238, 155, 278, 122]
             const movies = await Promise.all(
@@ -35,7 +78,6 @@ export default function Home() {
             setFamousMovies(movies)
         }
 
-        fetchPopular()
         fetchFamous()
     }, [])
 
@@ -59,57 +101,71 @@ export default function Home() {
 
     return (
         <div className="relative p-6 bg-black min-h-screen text-white overflow-hidden">
-            <h1 className="text-3xl font-bold mb-6">人気の映画</h1>
+            {/* ▼ ジャンルが選択されているときはジャンル名を表示 */}
+            {genreId && (
+                <>
+                    <h1 className="text-3xl font-bold mb-6">{genreName} の映画</h1>
+                    <div className="grid grid-cols-2 md:grid-cols-8 gap-4 mb-10">
+                        {genreMovies.map((movie) => (
+                            <Link href={`/movie/${movie.id}`} key={movie.id}>
+                                <div className="bg-gray-800 p-2 rounded cursor-pointer hover:bg-gray-700">
+                                    <img src="/noimage.png" alt="No image" className="rounded shadow-lg w-full" />
+                                    <p className="mt-2">{movie.title}</p>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </>
+            )}
 
-            <div className="grid grid-cols-2 md:grid-cols-8 gap-4 mb-10">
-                {popularMovies.map((movie) => (
-                    <Link href={`/movie/${movie.id}`} key={movie.id}>
-                        <div className="bg-gray-800 p-2 rounded cursor-pointer hover:bg-gray-700">
-                            {/*<img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title}*/}
-                            {/*     className="rounded"/>*/}
-                            <img
-                                src="/noimage.png"
-                                alt="No image"
-                                className="rounded shadow-lg w-full"
-                            />
-                            <p className="mt-2">{movie.title}</p>
-                        </div>
-                    </Link>
-                ))}
-            </div>
+            {/* ▼ 通常の人気映画（ジャンル未選択時のみ表示） */}
+            {!genreId && (
+                <>
+                    <h1 className="text-3xl font-bold mb-6">人気の映画</h1>
+                    <div className="grid grid-cols-2 md:grid-cols-8 gap-4 mb-10">
+                        {popularMovies.map((movie) => (
+                            <Link href={`/movie/${movie.id}`} key={movie.id}>
+                                <div className="bg-gray-800 p-2 rounded cursor-pointer hover:bg-gray-700">
+                                    <img src="/noimage.png" alt="No image" className="rounded shadow-lg w-full" />
+                                    <p className="mt-2">{movie.title}</p>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </>
+            )}
 
-            <h2 className="text-2xl font-semibold mb-4">みんなが知ってる有名映画</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20">
-                {famousMovies.map((movie) => (
-                    <Link href={`/movie/${movie.id}`} key={movie.id}>
-                        <div className="bg-gray-700 p-2 rounded cursor-pointer hover:bg-gray-600">
-                            {/*<img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title}*/}
-                            {/*     className="rounded"/>*/}
-                            <img
-                                src="/noimage.png"
-                                alt="No image"
-                                className="rounded shadow-lg w-full"
-                            />
-                            <p className="mt-2">{movie.title}</p>
-                        </div>
-                    </Link>
-                ))}
-            </div>
+            {/* ▼ 有名映画はジャンル未選択時のみ表示 */}
+            {!genreId && (
+                <>
+                    <h2 className="text-2xl font-semibold mb-4">みんなが知ってる有名映画</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20">
+                        {famousMovies.map((movie) => (
+                            <Link href={`/movie/${movie.id}`} key={movie.id}>
+                                <div className="bg-gray-700 p-2 rounded cursor-pointer hover:bg-gray-600">
+                                    <img src="/noimage.png" alt="No image" className="rounded shadow-lg w-full" />
+                                    <p className="mt-2">{movie.title}</p>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </>
+            )}
 
-            {/* 弾幕コメント */}
+            {/* ▼ 弾幕コメントは常に表示 */}
             {comments.map((comment, index) => (
                 <Link href={`/movie/${comment.movieId}`} key={`${comment.id}-${index}`}>
                     <div
                         className="absolute whitespace-nowrap text-lg font-bold text-white cursor-pointer"
                         style={{
                             top: `${comment.top}px`,
-                            transform: 'translateX(100vw)', // ← これを追加！
+                            transform: 'translateX(100vw)',
                             animationDelay: `${comment.delay}s`,
                             animationName: 'slide',
                             animationDuration: '15s',
                             animationTimingFunction: 'linear',
                             animationIterationCount: 'infinite',
-                            willChange: 'transform'
+                            willChange: 'transform',
                         }}
                     >
                         {'⭐'.repeat(comment.rating)} {comment.text}
