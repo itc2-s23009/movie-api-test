@@ -62,9 +62,25 @@ export default function Layout({ children }) {
                     <Link href="/admin/reviews" className="block hover:text-blue-400">管理者レビュー一覧</Link>
                     <Link href="/profile" className="block hover:text-blue-400">マイページ</Link>
                     <Link href="/settings" className="block hover:text-blue-400">設定</Link>
+
+                    {/* ▼ ジャンルメニュー追加部分 */}
+                    <hr className="border-gray-600" />
+                    <h2 className="text-xl font-bold">ジャンル</h2>
+                    <ul className="space-y-1 text-sm">
+                        <li><Link href="/?genre=28&name=アクション" className="block hover:text-blue-400">アクション</Link></li>
+                        <li><Link href="/?genre=35&name=コメディ" className="block hover:text-blue-400">コメディ</Link></li>
+                        <li><Link href="/?genre=18&name=ドラマ" className="block hover:text-blue-400">ドラマ</Link></li>
+                        <li><Link href="/?genre=10749&name=ロマンス" className="block hover:text-blue-400">ロマンス</Link></li>
+                        <li><Link href="/?genre=27&name=ホラー" className="block hover:text-blue-400">ホラー</Link></li>
+                        <li><Link href="/?genre=16&name=アニメ" className="block hover:text-blue-400">アニメ</Link></li>
+                        <li><Link href="/?genre=99&name=ドキュメンタリー" className="block hover:text-blue-400">ドキュメンタリー</Link></li>
+                    </ul>
+
+
                     <hr className="border-gray-600" />
                     <div className="text-sm text-gray-400">※ フィルターや絞り込み機能は今後追加予定</div>
                 </div>
+
 
                 {/* ログアウト */}
                 <div className="p-4 border-t border-gray-700">
