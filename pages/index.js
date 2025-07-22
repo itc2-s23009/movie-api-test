@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react'
 import Link from 'next/link'
-import {db} from '../lib/firebase'
+import {db} from '@/lib/firebase'
 import {collection, query, orderBy, onSnapshot} from 'firebase/firestore'
 
 export default function Home() {
