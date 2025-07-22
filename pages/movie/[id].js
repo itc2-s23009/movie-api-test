@@ -17,6 +17,8 @@ export default function MovieDetail() {
     const [rating, setRating] = useState(5)
     const [comments, setComments] = useState([])
     const [user, setUser] = useState(null)
+    const [isNowPlaying, setIsNowPlaying] = useState(false)  // 現在上映中かどうか
+
 
     const providerLinks = {
         "Netflix": "https://www.netflix.com/",
@@ -54,6 +56,20 @@ export default function MovieDetail() {
             const data = await res.json()
             setMovie(data)
 
+            // 現在上映中の映画IDに含まれているかチェック
+            const checkNowPlaying = async () => {
+                const nowPlayingRes = await fetch(`https://api.themoviedb.org/3/movie/now_playing?language=ja-JP&region=JP`, {
+                    headers: {
+                        Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_ACCESS_TOKEN}`
+                    }
+                })
+                const nowPlayingData = await nowPlayingRes.json()
+                const movieIdsNowPlaying = nowPlayingData.results.map(m => m.id)
+                setIsNowPlaying(movieIdsNowPlaying.includes(data.id))
+            }
+            await checkNowPlaying()
+
+            // 配信サービスの取得
             const watchRes = await fetch(`https://api.themoviedb.org/3/movie/${id}/watch/providers`, {
                 headers: {
                     Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_ACCESS_TOKEN}`
@@ -64,7 +80,6 @@ export default function MovieDetail() {
                 .filter(p => providerLinks[p.provider_name])
             setWatchProviders(jpProviders)
         }
-
         fetchMovie()
     }, [id])
 
@@ -117,9 +132,14 @@ export default function MovieDetail() {
         <div className="min-h-screen bg-black text-white p-6">
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-8">
                 <div className="md:w-1/3 space-y-6">
+                    {/*<img*/}
+                    {/*    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}*/}
+                    {/*    alt={movie.title}*/}
+                    {/*    className="rounded shadow-lg w-full"*/}
+                    {/*/>*/}
                     <img
-                        src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                        alt={movie.title}
+                        src="/noimage.png"
+                        alt="No image"
                         className="rounded shadow-lg w-full"
                     />
                     <form onSubmit={handleSubmit} className="bg-gray-900 border border-gray-700 p-4 rounded space-y-4">
@@ -133,11 +153,20 @@ export default function MovieDetail() {
                         <div className="flex items-center gap-2">
                             <span>評価:</span>
                             {[1, 2, 3, 4, 5].map((num) => (
-                                <span
+                                <button
                                     key={num}
+                                    type="button"
                                     onClick={() => setRating(num)}
-                                    className={`cursor-pointer text-2xl ${num <= rating ? 'text-yellow-400' : 'text-gray-500'}`}
-                                >⭐</span>
+                                    className="focus:outline-none"
+                                >
+                                <span
+                                    className={`text-2xl ${
+                                        num <= rating ? 'text-yellow-400' : 'text-gray-500'
+                                    }`}
+                                >
+                                    ★
+                                </span>
+                                </button>
                             ))}
                         </div>
                         <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
@@ -150,7 +179,19 @@ export default function MovieDetail() {
                     <div>
                         <h1 className="text-3xl font-bold mb-2">{movie.title}</h1>
                         <p className="text-gray-300">{movie.overview}</p>
+
+                        {isNowPlaying && (
+                            <a
+                                href={`https://eiga.com/now/q/?title=${encodeURIComponent(movie.title)}&region=&pref=&area=&genre=on&sort=release`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-400 text-white py-2 px-4 rounded mt-4"
+                            >
+                                🎬 「{movie.title}」を映画館で探す（映画.com）
+                            </a>
+                        )}
                     </div>
+
 
                     {watchProviders.length > 0 && (
                         <div>
