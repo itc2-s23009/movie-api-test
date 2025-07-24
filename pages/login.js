@@ -27,7 +27,14 @@ export default function Login() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white px-4">
+            {/* ▼ ロゴ画像 */}
+            <img
+                src="/logo.png"
+                alt="Web Cinema Logo"
+                className="w-80 h-80 mb-6"
+            />
+
             <form onSubmit={handleSubmit} className="bg-gray-900 p-8 rounded shadow-md space-y-4 w-80">
                 <h2 className="text-2xl font-bold mb-4">{isLogin ? 'ログイン' : '新規登録'}</h2>
                 <input
