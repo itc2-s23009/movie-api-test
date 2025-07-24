@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { auth } from '../lib/firebase'
@@ -6,6 +6,7 @@ import { signOut } from 'firebase/auth'
 
 export default function Layout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false)
+    const sidebarRef = useRef(null) // メニュー本体の参照
     const [search, setSearch] = useState('')
     const router = useRouter()
 
@@ -20,6 +21,20 @@ export default function Layout({ children }) {
         router.push('/login')
     }
 
+    // ▼ メニュー外クリックで閉じる処理
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (sidebarOpen && sidebarRef.current && !sidebarRef.current.contains(e.target)) {
+                setSidebarOpen(false)
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside)
+        }
+    }, [sidebarOpen])
+
     return (
         <div className="min-h-screen bg-black text-white">
             {/* ヘッダー */}
@@ -29,7 +44,7 @@ export default function Layout({ children }) {
                     &#9776;
                 </button>
 
-                {/* 検索バーを右に寄せる */}
+                {/* 検索バー */}
                 <form onSubmit={handleSearch} className="ml-auto">
                     <input
                         type="text"
@@ -43,6 +58,7 @@ export default function Layout({ children }) {
 
             {/* サイドメニュー */}
             <aside
+                ref={sidebarRef} // ← ここが重要
                 className={`fixed top-0 left-0 h-full w-64 bg-gray-800 transform ${
                     sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 } transition-transform duration-300 ease-in-out z-40 flex flex-col`}
@@ -63,7 +79,6 @@ export default function Layout({ children }) {
                     <Link href="/profile" className="block hover:text-blue-400">マイページ</Link>
                     <Link href="/settings" className="block hover:text-blue-400">設定</Link>
 
-                    {/* ▼ ジャンルメニュー追加部分 */}
                     <hr className="border-gray-600" />
                     <h2 className="text-xl font-bold">ジャンル</h2>
                     <ul className="space-y-1 text-sm">
@@ -76,11 +91,9 @@ export default function Layout({ children }) {
                         <li><Link href="/?genre=99&name=ドキュメンタリー" className="block hover:text-blue-400">ドキュメンタリー</Link></li>
                     </ul>
 
-
                     <hr className="border-gray-600" />
                     <div className="text-sm text-gray-400">※ フィルターや絞り込み機能は今後追加予定</div>
                 </div>
-
 
                 {/* ログアウト */}
                 <div className="p-4 border-t border-gray-700">
