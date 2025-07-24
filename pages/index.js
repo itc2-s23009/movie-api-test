@@ -169,7 +169,8 @@ export default function Home() {
                 </>
             )}
 
-            {comments.map((comment, index) => (
+            {/* ▼ 弾幕コメントもジャンル未選択時のみ表示 */}
+            {!genreId && comments.map((comment, index) => (
                 <Link href={`/movie/${comment.movieId}`} key={`${comment.id}-${index}`}>
                     <div
                         className="absolute whitespace-nowrap text-lg font-bold text-white cursor-pointer"
