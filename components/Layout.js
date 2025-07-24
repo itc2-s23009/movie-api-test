@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { auth } from '../lib/firebase'
 import { signOut } from 'firebase/auth'
 
 export default function Layout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false)
-    const sidebarRef = useRef(null) // メニュー本体の参照
+    const sidebarRef = useRef(null)
     const [search, setSearch] = useState('')
     const router = useRouter()
 
@@ -14,6 +13,7 @@ export default function Layout({ children }) {
         e.preventDefault()
         if (!search.trim()) return
         router.push(`/search?query=${encodeURIComponent(search)}`)
+        setSidebarOpen(false)
     }
 
     const handleLogout = async () => {
@@ -21,30 +21,30 @@ export default function Layout({ children }) {
         router.push('/login')
     }
 
-    // ▼ メニュー外クリックで閉じる処理
+    // 外部クリックでメニューを閉じる
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (sidebarOpen && sidebarRef.current && !sidebarRef.current.contains(e.target)) {
                 setSidebarOpen(false)
             }
         }
-
         document.addEventListener('mousedown', handleClickOutside)
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside)
-        }
+        return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [sidebarOpen])
+
+    const closeSidebarAndNavigate = (href) => {
+        setSidebarOpen(false)
+        router.push(href)
+    }
 
     return (
         <div className="min-h-screen bg-black text-white">
             {/* ヘッダー */}
             <header className="flex justify-between items-center p-4 bg-gray-900 border-b border-gray-700">
-                {/* 三本線メニュー */}
                 <button onClick={() => setSidebarOpen(true)} className="text-white text-2xl mr-4">
                     &#9776;
                 </button>
 
-                {/* 検索バー */}
                 <form onSubmit={handleSearch} className="ml-auto">
                     <input
                         type="text"
@@ -58,12 +58,11 @@ export default function Layout({ children }) {
 
             {/* サイドメニュー */}
             <aside
-                ref={sidebarRef} // ← ここが重要
+                ref={sidebarRef}
                 className={`fixed top-0 left-0 h-full w-64 bg-gray-800 transform ${
                     sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 } transition-transform duration-300 ease-in-out z-40 flex flex-col`}
             >
-                {/* ✕ ボタン */}
                 <button
                     onClick={() => setSidebarOpen(false)}
                     className="text-white text-2xl absolute top-4 right-4"
@@ -71,24 +70,35 @@ export default function Layout({ children }) {
                     ✕
                 </button>
 
-                {/* メニュー */}
                 <div className="flex-1 p-6 space-y-4 overflow-y-auto mt-12">
                     <h2 className="text-xl font-bold">メニュー</h2>
-                    <Link href="/" className="block hover:text-blue-400">ホーム</Link>
-                    <Link href="/admin/reviews" className="block hover:text-blue-400">管理者レビュー一覧</Link>
-                    <Link href="/profile" className="block hover:text-blue-400">マイページ</Link>
-                    <Link href="/settings" className="block hover:text-blue-400">設定</Link>
+                    <button onClick={() => closeSidebarAndNavigate('/')} className="block hover:text-blue-400 text-left w-full">ホーム</button>
+                    <button onClick={() => closeSidebarAndNavigate('/admin/reviews')} className="block hover:text-blue-400 text-left w-full">管理者レビュー一覧</button>
+                    <button onClick={() => closeSidebarAndNavigate('/profile')} className="block hover:text-blue-400 text-left w-full">マイページ</button>
+                    <button onClick={() => closeSidebarAndNavigate('/settings')} className="block hover:text-blue-400 text-left w-full">設定</button>
 
                     <hr className="border-gray-600" />
+
                     <h2 className="text-xl font-bold">ジャンル</h2>
                     <ul className="space-y-1 text-sm">
-                        <li><Link href="/?genre=28&name=アクション" className="block hover:text-blue-400">アクション</Link></li>
-                        <li><Link href="/?genre=35&name=コメディ" className="block hover:text-blue-400">コメディ</Link></li>
-                        <li><Link href="/?genre=18&name=ドラマ" className="block hover:text-blue-400">ドラマ</Link></li>
-                        <li><Link href="/?genre=10749&name=ロマンス" className="block hover:text-blue-400">ロマンス</Link></li>
-                        <li><Link href="/?genre=27&name=ホラー" className="block hover:text-blue-400">ホラー</Link></li>
-                        <li><Link href="/?genre=16&name=アニメ" className="block hover:text-blue-400">アニメ</Link></li>
-                        <li><Link href="/?genre=99&name=ドキュメンタリー" className="block hover:text-blue-400">ドキュメンタリー</Link></li>
+                        {[
+                            { name: 'アクション', id: 28 },
+                            { name: 'コメディ', id: 35 },
+                            { name: 'ドラマ', id: 18 },
+                            { name: 'ロマンス', id: 10749 },
+                            { name: 'ホラー', id: 27 },
+                            { name: 'アニメ', id: 16 },
+                            { name: 'ドキュメンタリー', id: 99 },
+                        ].map(({ name, id }) => (
+                            <li key={id}>
+                                <button
+                                    onClick={() => closeSidebarAndNavigate(`/?genre=${id}&name=${name}`)}
+                                    className="block hover:text-blue-400 text-left w-full"
+                                >
+                                    {name}
+                                </button>
+                            </li>
+                        ))}
                     </ul>
 
                     <hr className="border-gray-600" />
