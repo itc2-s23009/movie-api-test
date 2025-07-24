@@ -1,17 +1,14 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/router' // ← 追加
 import { db } from '../lib/firebase'
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
 
 export default function Home() {
     const [popularMovies, setPopularMovies] = useState([])
     const [famousMovies, setFamousMovies] = useState([])
-    const [genreMovies, setGenreMovies] = useState([])
+    const [genreMovies, setGenreMovies] = useState([]) // ← 追加
     const [comments, setComments] = useState([])
-
-    const [currentPage, setCurrentPage] = useState(1) // ← 現在のページ
-    const [totalPages, setTotalPages] = useState(1)   // ← 総ページ数（APIから取得）
 
     const router = useRouter()
     const genreId = router.query.genre
@@ -19,6 +16,7 @@ export default function Home() {
 
     useEffect(() => {
         if (!genreId) {
+            // ジャンル選択時は人気映画は表示しない
             async function fetchPopular() {
                 const res = await fetch('https://api.themoviedb.org/3/movie/popular?language=ja-JP&page=1', {
                     headers: {
@@ -29,35 +27,40 @@ export default function Home() {
                 const data = await res.json()
                 setPopularMovies(data.results)
             }
+
             fetchPopular()
         }
-    }, [genreId])
+    }, [genreId]) // ← genreId 依存に
 
     useEffect(() => {
         if (genreId) {
             async function fetchGenreMovies() {
-                const res = await fetch(
-                    `https://api.themoviedb.org/3/discover/movie?with_genres=${genreId}&language=ja-JP&page=${currentPage}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_ACCESS_TOKEN}`,
-                            accept: 'application/json',
-                        },
-                    }
-                )
-                const data = await res.json()
-                setGenreMovies(data.results)
-                setTotalPages(data.total_pages) // ← 総ページ数を保存
+                const fetchPage = async (page) => {
+                    const res = await fetch(
+                        `https://api.themoviedb.org/3/discover/movie?with_genres=${genreId}&language=ja-JP&page=${page}`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_ACCESS_TOKEN}`,
+                                accept: 'application/json',
+                            },
+                        }
+                    )
+                    const data = await res.json()
+                    return data.results
+                }
+
+                // 2ページ分（20件 × 2 = 40件）取得して結合
+                const page1 = await fetchPage(1)
+                const page2 = await fetchPage(2)
+                const allResults = [...page1, ...page2].slice(0, 40) // 念のため40件でカット
+
+                setGenreMovies(allResults)
             }
+
             fetchGenreMovies()
         }
-    }, [genreId, currentPage]) // ← currentPage 依存を追加
-
-    useEffect(() => {
-        // ジャンルが変わったときにページ番号を1にリセット
-        setCurrentPage(1)
     }, [genreId])
-
+    // ← ジャンル変更時に再取得
 
     useEffect(() => {
         async function fetchFamous() {
@@ -74,6 +77,7 @@ export default function Home() {
             )
             setFamousMovies(movies)
         }
+
         fetchFamous()
     }, [])
 
@@ -91,50 +95,30 @@ export default function Home() {
             })
             setComments(reviews)
         })
+
         return () => unsubscribe()
     }, [])
 
     return (
         <div className="relative p-6 bg-black min-h-screen text-white overflow-hidden">
+            {/* ▼ ジャンルが選択されているときはジャンル名を表示 */}
             {genreId && (
                 <>
                     <h1 className="text-3xl font-bold mb-6">{genreName} の映画</h1>
-
-                    {/* ▼ ページネーション UI */}
-                    <div className="flex justify-center gap-4 mb-10">
-                        <button
-                            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                            className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 disabled:opacity-50"
-                            disabled={currentPage === 1}
-                        >
-                            前へ
-                        </button>
-                        <span className="flex items-center">{currentPage} / {totalPages}</span>
-                        <button
-                            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                            className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 disabled:opacity-50"
-                            disabled={currentPage === totalPages}
-                        >
-                            次へ
-                        </button>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-8 gap-4 mb-6">
+                    <div className="grid grid-cols-2 md:grid-cols-8 gap-4 mb-10">
                         {genreMovies.map((movie) => (
                             <Link href={`/movie/${movie.id}`} key={movie.id}>
                                 <div className="bg-gray-800 p-2 rounded cursor-pointer hover:bg-gray-700">
                                     <img src="/noimage.png" alt="No image" className="rounded shadow-lg w-full" />
-                                    <p className="mt-2 text-sm font-medium truncate" title={movie.title}>
-                                        {movie.title}
-                                    </p>
+                                    <p className="mt-2">{movie.title}</p>
                                 </div>
                             </Link>
                         ))}
                     </div>
-
                 </>
             )}
 
+            {/* ▼ 通常の人気映画（ジャンル未選択時のみ表示） */}
             {!genreId && (
                 <>
                     <h1 className="text-3xl font-bold mb-6">人気の映画</h1>
@@ -143,9 +127,7 @@ export default function Home() {
                             <Link href={`/movie/${movie.id}`} key={movie.id}>
                                 <div className="bg-gray-800 p-2 rounded cursor-pointer hover:bg-gray-700">
                                     <img src="/noimage.png" alt="No image" className="rounded shadow-lg w-full" />
-                                    <p className="mt-2 text-sm font-medium truncate" title={movie.title}>
-                                        {movie.title}
-                                    </p>
+                                    <p className="mt-2">{movie.title}</p>
                                 </div>
                             </Link>
                         ))}
@@ -153,6 +135,7 @@ export default function Home() {
                 </>
             )}
 
+            {/* ▼ 有名映画はジャンル未選択時のみ表示 */}
             {!genreId && (
                 <>
                     <h2 className="text-2xl font-semibold mb-4">みんなが知ってる有名映画</h2>
@@ -169,7 +152,8 @@ export default function Home() {
                 </>
             )}
 
-            {comments.map((comment, index) => (
+            {/* ▼ 弾幕コメントもジャンル未選択時のみ表示 */}
+            {!genreId && comments.map((comment, index) => (
                 <Link href={`/movie/${comment.movieId}`} key={`${comment.id}-${index}`}>
                     <div
                         className="absolute whitespace-nowrap text-lg font-bold text-white cursor-pointer"
