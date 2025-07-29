@@ -20,38 +20,58 @@ export default function Home() {
     useEffect(() => {
         if (!genreId) {
             async function fetchPopular() {
-                const res = await fetch('https://api.themoviedb.org/3/movie/popular?language=ja-JP&page=1', {
-                    headers: {
-                        Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_ACCESS_TOKEN}`,
-                        accept: 'application/json',
-                    },
-                })
-                const data = await res.json()
-                setPopularMovies(data.results)
+                try {
+                    const pagesNeeded = 2 // 1ページ20件なので2ページ取れば最大40件
+                    const responses = await Promise.all(
+                        Array.from({ length: pagesNeeded }, (_, i) =>
+                            fetch(`https://api.themoviedb.org/3/movie/popular?language=ja-JP&page=${i + 1}`, {
+                                headers: {
+                                    Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_ACCESS_TOKEN}`,
+                                    accept: 'application/json',
+                                },
+                            }).then((res) => res.json())
+                        )
+                    )
+
+                    // 結果をマージして24件に制限
+                    const allResults = responses.flatMap((res) => res.results).slice(0, 24)
+                    setPopularMovies(allResults)
+                } catch (error) {
+                    console.error('人気映画の取得に失敗しました', error)
+                }
             }
+
             fetchPopular()
         }
     }, [genreId])
 
+
     useEffect(() => {
         if (genreId) {
             async function fetchGenreMovies() {
-                const res = await fetch(
-                    `https://api.themoviedb.org/3/discover/movie?with_genres=${genreId}&language=ja-JP&page=${currentPage}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_ACCESS_TOKEN}`,
-                            accept: 'application/json',
-                        },
-                    }
+                const pagesNeeded = 2 // 1ページ20件なので2ページ取得しておく
+                const responses = await Promise.all(
+                    Array.from({ length: pagesNeeded }, (_, i) =>
+                        fetch(
+                            `https://api.themoviedb.org/3/discover/movie?with_genres=${genreId}&language=ja-JP&page=${(currentPage - 1) * pagesNeeded + i + 1}`,
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_ACCESS_TOKEN}`,
+                                    accept: 'application/json',
+                                },
+                            }
+                        ).then(res => res.json())
+                    )
                 )
-                const data = await res.json()
-                setGenreMovies(data.results)
-                setTotalPages(data.total_pages) // ← 総ページ数を保存
+
+                const mergedResults = responses.flatMap(res => res.results).slice(0, 24)
+                setGenreMovies(mergedResults)
+                setTotalPages(Math.ceil(responses[0].total_results / 24))
             }
             fetchGenreMovies()
         }
-    }, [genreId, currentPage]) // ← currentPage 依存を追加
+    }, [genreId, currentPage])
+
 
     useEffect(() => {
         // ジャンルが変わったときにページ番号を1にリセット
@@ -61,7 +81,7 @@ export default function Home() {
 
     useEffect(() => {
         async function fetchFamous() {
-            const ids = [1891, 11, 238, 155, 278, 122]
+            const ids = [1891, 11, 238, 155, 278, 122, 1359607, 862]
             const movies = await Promise.all(
                 ids.map((id) =>
                     fetch(`https://api.themoviedb.org/3/movie/${id}?language=ja-JP`, {
@@ -123,6 +143,11 @@ export default function Home() {
                         {genreMovies.map((movie) => (
                             <Link href={`/movie/${movie.id}`} key={movie.id}>
                                 <div className="bg-gray-800 p-2 rounded cursor-pointer hover:bg-gray-700">
+                                    {/*<img*/}
+                                    {/*    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}*/}
+                                    {/*    alt={movie.title}*/}
+                                    {/*    className="rounded shadow-lg w-full"*/}
+                                    {/*/>*/}
                                     <img src="/noimage.png" alt="No image" className="rounded shadow-lg w-full" />
                                     <p className="mt-2 text-sm font-medium truncate" title={movie.title}>
                                         {movie.title}
