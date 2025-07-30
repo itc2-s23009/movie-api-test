@@ -42,7 +42,7 @@ export default function Layout({ children }) {
     return (
         <div className="min-h-screen bg-black text-white">
             {/* ヘッダー */}
-            <header className="flex justify-between items-center p-4 bg-gray-900 border-b border-gray-700">
+            <header className="fixed top-0 left-0 right-0 z-40 bg-gray-900 border-b border-gray-700 flex items-center justify-between p-4">
                 <button onClick={() => setSidebarOpen(true)} className="text-white text-2xl mr-4">
                     &#9776;
                 </button>
@@ -129,7 +129,7 @@ export default function Layout({ children }) {
             </aside>
 
             {/* メイン */}
-            <main className="pt-4 px-4 md:px-6">{children}</main>
+            <main className="pt-[80px] px-4 md:px-6">{children}</main>
         </div>
     )
 }
