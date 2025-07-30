@@ -112,16 +112,16 @@ const ProfilePage = () => {
                                     </h2>
                                 </Link>
                                 {group.movie.poster_path && (
-                                    <img
+                                   /* <img
                                         src={`https://image.tmdb.org/t/p/w92${group.movie.poster_path}`}
                                         alt={group.movie.title}
                                         className="w-16 h-auto rounded shadow ml-auto"
-                                    />
-                                    /*<img
+                                    />*/
+                                    <img
                                     src="/noimage.png"
                                     alt="No image"
                                     className="w-16 h-auto rounded shadow ml-auto"
-                                    />*/
+                                    />
                                 )}
                             </div>
                         ) : (
